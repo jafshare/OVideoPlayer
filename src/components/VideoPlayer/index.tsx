@@ -1,32 +1,24 @@
-import React, { useEffect, useRef } from "react";
-import Artplayer from "artplayer";
+import React from "react";
+import ReactPlayer from "react-player";
+import type { ReactPlayerProps } from "react-player";
+import styles from "./index.module.less";
 const VideoPlayer: React.FC<{
-  option: Omit<Artplayer["option"], "container">;
-  getInstance?: (art: Artplayer) => any;
+  source: ReactPlayerProps["url"];
+  options?: Omit<ReactPlayerProps, "url">;
 }> = (props) => {
-  const { getInstance, option, ...rest } = props || {};
-  const artRef = useRef<HTMLDivElement>();
-  useEffect(() => {
-    const art = new Artplayer({
-      ...option,
-      container: artRef.current as any
-    });
-    if (getInstance && typeof getInstance === "function") {
-      getInstance(art);
-    }
-    return () => {
-      if (art && art.destroy) {
-        art.destroy(false);
-      }
-    };
-    /* eslint-disable */
-  }, []);
+  const { source, ...rest } = props || {};
   return (
-    <div
-      ref={artRef as any}
-      style={{ width: "100%", height: "100%" }}
-      {...rest}
-    ></div>
+    <div className={styles.playerWrapper}>
+      <ReactPlayer
+        className={styles.player}
+        width="100%"
+        height="100%"
+        url={source}
+        controls
+        playing
+        {...rest}
+      />
+    </div>
   );
 };
 export default VideoPlayer;

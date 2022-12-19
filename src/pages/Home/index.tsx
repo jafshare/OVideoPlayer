@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import type { MenuProps } from "antd";
-import { Dropdown, Tree } from "antd";
-import { useMount, useRequest } from "ahooks";
+import { Button, Dropdown, Empty, Spin, Tree, Typography } from "antd";
+import { PlayCircleOutlined, SnippetsOutlined } from "@ant-design/icons";
+import { useMount, useRequest, useSize } from "ahooks";
 import type { DataNode } from "antd/es/tree";
 import PlayerModal from "./components/PlayerModal";
+import styles from "./index.module.less";
 import { getDir, getFileStreamURL } from "@/server";
+const Text = Typography.Text;
 const transNodeData = (
   data: any[],
   extra?: Record<string, any>
@@ -21,19 +24,31 @@ const transNodeData = (
         }
       }
     ];
+    const isVideo = item?.mime?.startsWith("video") || false;
+    const VideoTitleRender = (
+      <Dropdown menu={{ items }} trigger={["contextMenu"]}>
+        <Text ellipsis={{ tooltip: item.basename }}>{item.basename}</Text>
+      </Dropdown>
+    );
     const TitleRender =
-      item.type === "directory" ? (
-        item.basename
+      item.type !== "directory" && isVideo ? (
+        VideoTitleRender
       ) : (
-        <Dropdown menu={{ items }} trigger={["contextMenu"]}>
-          <div>{item.basename}</div>
-        </Dropdown>
+        <Text ellipsis={{ tooltip: item.basename }}>{item.basename}</Text>
       );
     return {
       title: TitleRender,
       key: item.filename,
       children,
       data: item,
+      icon:
+        item.type !== "directory" ? (
+          isVideo ? (
+            <PlayCircleOutlined />
+          ) : (
+            <SnippetsOutlined />
+          )
+        ) : null,
       isLeaf: item.type !== "directory"
     };
   });
@@ -60,6 +75,8 @@ const updateTreeData = (
   });
 
 const Home = () => {
+  const contentRef = useRef(null);
+  const size = useSize(contentRef);
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [visible, setVisible] = useState(false);
   const [src, setSrc] = useState("");
@@ -75,7 +92,6 @@ const Home = () => {
           setVisible(true);
         }
       });
-      console.log("transformedData:", transformedData);
       if (root) {
         setTreeData(transformedData);
       } else {
@@ -87,24 +103,41 @@ const Home = () => {
     { loadingDelay: 300 }
   );
   const onLoadData = async (node: DataNode) => {
-    // const dir = await getDir("/");
-    // console.log("node:", node);
-    console.log("node:", node);
     await getDirContent({ path: node.key, key: node.key, root: false });
   };
-  useMount(() => {
+  const handleRefresh = () => {
     getDirContent({ path: "/", root: true });
+  };
+  useMount(() => {
+    handleRefresh();
   });
 
   return (
     <>
-      <Tree
-        loadData={onLoadData}
-        treeData={treeData}
-        style={{ textAlign: "left" }}
-        showLine
-        blockNode
-      />
+      <div className={styles.wrapper}>
+        <div className={styles.header}>
+          <Button type="primary" loading={loading} onClick={handleRefresh}>
+            刷新
+          </Button>
+        </div>
+        <div className={styles.content} ref={contentRef}>
+          <Spin spinning={loading} tip="正在加载中...">
+            {treeData.length === 0 ? (
+              <Empty description="暂无数据" />
+            ) : (
+              <Tree
+                loadData={onLoadData}
+                treeData={treeData}
+                style={{ textAlign: "left" }}
+                height={size?.height}
+                showIcon
+                showLine
+                blockNode
+              />
+            )}
+          </Spin>
+        </div>
+      </div>
       <PlayerModal
         visible={visible}
         src={src}
