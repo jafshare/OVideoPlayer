@@ -7,7 +7,7 @@ import CardView from "./components/CardView";
 import { getFileStreamURL } from "@/server";
 const typeOptions = [
   { label: "文件树", value: "tree" },
-  { label: "视频卡", value: "card" }
+  { label: "视频库", value: "card" }
 ];
 const Home = () => {
   const [visible, setVisible] = useState(false);
@@ -46,7 +46,11 @@ const Home = () => {
               onLoadingChange={(isLoading) => setLoading(isLoading)}
             />
           ) : (
-            <CardView />
+            <CardView
+              actionRef={containerRef}
+              onPlay={handlePlay}
+              onLoadingChange={(isLoading) => setLoading(isLoading)}
+            />
           )}
         </div>
       </div>

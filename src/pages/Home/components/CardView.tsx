@@ -1,17 +1,24 @@
 import { useRequest } from "ahooks";
 import { Card, Col, Empty, Row, Spin } from "antd";
-import React from "react";
+import React, { useEffect, useImperativeHandle } from "react";
+import classnames from "classnames";
+import styles from "./CardView.module.less";
 export interface CardViewProps {
   column?: number;
+  onPlay?: (item?: any) => void;
+  onLoadingChange?: (loading: boolean) => void;
+  actionRef?: React.MutableRefObject<
+    undefined | null | { refresh: () => Promise<any> }
+  >;
 }
 const CardView: React.FC<CardViewProps> = (props) => {
-  const { column = 6 } = props;
+  const { column = 6, actionRef, onLoadingChange, onPlay } = props;
   const {
     runAsync: getList,
     data: list = [],
     loading
   } = useRequest(
-    async (params: { path: string; root: boolean; key?: string }) => {
+    async () => {
       return [
         { title: "明日之间" },
         { title: "快乐的喜喜" },
@@ -36,13 +43,22 @@ const CardView: React.FC<CardViewProps> = (props) => {
       const CardDom = (
         <Card
           bordered={false}
-          className="full"
-          cover={
-            <img src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png" />
-          }
+          className={classnames("full", styles.card)}
+          onClick={() => onPlay?.(item)}
           hoverable
         >
-          {item.title}
+          <div className={styles.cardContentWrapper}>
+            <div className={styles.cover}>
+              <img
+                src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
+                title={item.title}
+              />
+            </div>
+            <div className={styles.detail}>
+              <div className={styles.title}>{item.title}</div>
+              <div className={styles.time}>1:30:50</div>
+            </div>
+          </div>
         </Card>
       );
       Cols.push(
@@ -66,6 +82,13 @@ const CardView: React.FC<CardViewProps> = (props) => {
     }
     return Rows;
   };
+  useImperativeHandle(actionRef, () => ({
+    refresh: getList
+  }));
+  useEffect(() => {
+    onLoadingChange?.(loading);
+  }, [loading]);
+
   return (
     <div className="full">
       <Spin spinning={loading} tip="正在加载中...">
