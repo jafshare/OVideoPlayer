@@ -12,7 +12,7 @@ import { release } from "os";
 import { join } from "path";
 import { BrowserWindow, app, ipcMain, shell } from "electron";
 import { startServer } from "./server";
-
+import { registerShortcut } from "./shortcut";
 process.env.DIST_ELECTRON = join(__dirname, "../..");
 process.env.DIST = join(process.env.DIST_ELECTRON, "../dist");
 process.env.PUBLIC = app.isPackaged
@@ -48,12 +48,13 @@ async function createWindow() {
       contextIsolation: false
     }
   });
+  registerShortcut({ win } as any);
   win.setMenu(null);
   if (process.env.VITE_DEV_SERVER_URL) {
     // electron-vite-vue#298
     win.loadURL(url);
     // Open devTool if the app is not packaged
-    win.webContents.openDevTools();
+    // win.webContents.openDevTools();
   } else {
     win.loadFile(indexHtml);
   }

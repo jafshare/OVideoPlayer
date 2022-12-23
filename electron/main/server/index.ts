@@ -1,9 +1,30 @@
 import express from "express";
-import { getDir, getFileStat, getFileStream } from "../webdav";
-export function startServer() {
+import { getDir, getFileStat, getFileStream, scan } from "../webdav";
+import { init, model } from "../db";
+import { logError } from "../log";
+const getMediaInfo = async (media: any) => {
+  return {
+    title: media.basename,
+    type: "movie",
+    etag: media.etag,
+    description: "",
+    poster: "",
+    isCheck: true
+  };
+};
+export async function startServer() {
+  init();
+  // 连接服务器
   const app = express();
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
+  app.use(function errorHandler(err, req, res, next) {
+    if (res.headersSent) {
+      return next(err);
+    }
+    res.status(500);
+    res.render("error", { error: err });
+  });
   app.post("/getDirectoryContents", async function (req, res) {
     const body = req.body;
     res.send(await getDir(body.path));
@@ -39,6 +60,97 @@ export function startServer() {
     res.setHeader("Content-Length", chunkSize);
     res.statusCode = 206;
     stream.pipe(res);
+  });
+  // 扫描资源库
+  app.get("/scan", async function (req, res) {
+    // console.log("scan");
+    // const result = await scan("/");
+    // console.log("result:", result);
+    // await writeFile("./data.json", JSON.stringify(result, null, 2));
+    // TODO
+    const data = require(`${process.cwd()}/data.json`).slice(0, 10);
+    model.File.bulkCreate(
+      data.map((item) => ({
+        etag: item.etag,
+        title: item.basename,
+        url: item.filename,
+        mime: item.mime,
+        size: item.size
+      })),
+      {
+        // 如果etag冲突则更新
+        // updateOnDuplicate: ["etag"],
+        // 忽略重复冲突
+        ignoreDuplicates: true
+      }
+    );
+    for await (const item of data) {
+      // media
+      if (/video/.test(item.mime)) {
+        const info = await getMediaInfo(item);
+        console.log("info:", info);
+        // TODO 构建Movie、Series、Media
+        if (info.type === "movie") {
+          try {
+            const file = await model.File.findOne({
+              where: { etag: item.etag }
+            });
+            const [media] = await model.Media.findOrCreate({
+              where: { etag: item.etag },
+              defaults: {
+                title: info.title,
+                type: "movie",
+                description: info.description,
+                poster: info.poster,
+                isCheck: info.isCheck
+              }
+            });
+            const [movie] = await model.Movie.findOrCreate({
+              where: { etag: item.etag },
+              defaults: {
+                title: info.title,
+                url: item.filename,
+                mime: item.mime,
+                size: item.size,
+                subtitles: "",
+                duration: "00:10:00",
+                mediaId: media.id
+              }
+            });
+            await file.update({ movieId: movie.id });
+          } catch (error) {
+            console.log(error);
+            logError(error);
+            throw error;
+          }
+        } else {
+        }
+      }
+    }
+  });
+  // 影音(电影、电视)
+  app.get("/media", async function (req, res) {
+    // return res.send({ data: [], code: 1 });
+    const queryResult = await model.Media.findAll();
+    res.send({
+      data: queryResult,
+      code: 1
+    });
+  });
+  // 影音(电影、电视)
+  app.get("/media/:id", async function (req, res) {
+    const params = req.params;
+    const media = await model.Media.findOne({ where: { id: params.id } });
+    if (media.type === "movie") {
+      const data = await model.Movie.findOne({
+        where: { mediaId: params.id }
+      });
+      res.send({
+        data,
+        code: 1
+      });
+    } else {
+    }
   });
   app.listen(19898);
 }

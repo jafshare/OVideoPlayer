@@ -3,6 +3,7 @@ import { Card, Col, Empty, Row, Spin } from "antd";
 import React, { useEffect, useImperativeHandle } from "react";
 import classnames from "classnames";
 import styles from "./CardView.module.less";
+import { getMedia, getMediaDetail } from "@/server";
 export interface CardViewProps {
   column?: number;
   onPlay?: (item?: any) => void;
@@ -19,19 +20,11 @@ const CardView: React.FC<CardViewProps> = (props) => {
     loading
   } = useRequest(
     async () => {
-      return [
-        { title: "明日之间" },
-        { title: "快乐的喜喜" },
-        { title: "快乐的喜喜1" },
-        { title: "快乐的喜喜2" },
-        { title: "快乐的喜喜3" },
-        { title: "快乐的喜喜4" },
-        { title: "快乐的喜喜5" },
-        { title: "快乐的喜喜6" },
-        { title: "快乐的喜喜7" },
-        { title: "快乐的喜喜8" },
-        { title: "快乐的喜喜9" }
-      ];
+      const res = await getMedia();
+      if (res.code === 1) {
+        return res.data;
+      }
+      return [];
     },
     { loadingDelay: 300 }
   );
@@ -44,7 +37,10 @@ const CardView: React.FC<CardViewProps> = (props) => {
         <Card
           bordered={false}
           className={classnames("full", styles.card)}
-          onClick={() => onPlay?.(item)}
+          onClick={async () => {
+            await getMediaDetail(item.id);
+            // onPlay?.(item)
+          }}
           hoverable
         >
           <div className={styles.cardContentWrapper}>
@@ -92,7 +88,9 @@ const CardView: React.FC<CardViewProps> = (props) => {
   return (
     <div className="full">
       <Spin spinning={loading} tip="正在加载中...">
-        {list.length === 0 ? <Empty description="暂无数据" /> : CardContent()}
+        <div className={styles.contentContainer}>
+          {list.length === 0 ? <Empty description="暂无数据" /> : CardContent()}
+        </div>
       </Spin>
     </div>
   );
