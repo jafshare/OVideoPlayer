@@ -28,6 +28,10 @@ const CardView: React.FC<CardViewProps> = (props) => {
     },
     { loadingDelay: 300 }
   );
+  const handlePlay = async (item: any) => {
+    const res = await getMediaDetail(item.id);
+    onPlay?.(res.data);
+  };
   const CardContent = () => {
     const Rows = [];
     let Cols: any[] = [];
@@ -37,10 +41,7 @@ const CardView: React.FC<CardViewProps> = (props) => {
         <Card
           bordered={false}
           className={classnames("full", styles.card)}
-          onClick={async () => {
-            await getMediaDetail(item.id);
-            // onPlay?.(item)
-          }}
+          onClick={() => handlePlay(item)}
           hoverable
         >
           <div className={styles.cardContentWrapper}>

@@ -16,7 +16,7 @@ const Home = () => {
   const containerRef = useRef();
   const [type, setType] = useState("card");
   const handlePlay = async (item: any) => {
-    const file = await getFileStreamURL(item.filename);
+    const file = await getFileStreamURL(item.url || item.filename);
     setSrc(file);
     setVisible(true);
   };
