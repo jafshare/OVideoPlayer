@@ -4,36 +4,29 @@
   width: 100%;
   height: 100%;
 }
-.card {
-  :global(.ant-card-body) {
-    padding: 0;
-  }
-}
 
-.cardContentWrapper {
-  position: relative;
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
 
   .cover {
-    height: 50%;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
+    flex: 1;
+    padding-top: 150%;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-origin: border-box;
+    background-position: center;
+    cursor: pointer;
   }
 
   .detail {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.3);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
+    height: 30px;
+    line-height: 30px;
+
+    .title {
+      cursor: pointer;
+    }
   }
 }

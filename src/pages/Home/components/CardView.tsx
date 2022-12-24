@@ -1,9 +1,9 @@
 import { useRequest } from "ahooks";
-import { Card, Col, Empty, Row, Spin } from "antd";
+import { Col, Empty, Row, Spin, Typography } from "antd";
 import React, { useEffect, useImperativeHandle } from "react";
-import classnames from "classnames";
 import styles from "./CardView.module.less";
 import { getMedia, getMediaDetail } from "@/server";
+const { Text } = Typography;
 export interface CardViewProps {
   column?: number;
   onPlay?: (item?: any) => void;
@@ -38,22 +38,18 @@ const CardView: React.FC<CardViewProps> = (props) => {
     for (let index = 0; index < list.length; index++) {
       const item = list[index];
       const CardDom = (
-        <Card
-          bordered={false}
-          className={classnames("full", styles.card)}
-          onClick={() => handlePlay(item)}
-          hoverable
-        >
-          <div className={styles.cardContentWrapper}>
-            <div className={styles.cover}>
-              <img src={item.poster} title={item.title} />
-            </div>
-            <div className={styles.detail}>
-              <div className={styles.title}>{item.title}</div>
-              <div className={styles.time}>1:30:50</div>
+        <div className={styles.card}>
+          <div
+            className={styles.cover}
+            style={{ backgroundImage: `url("${item.poster}")` }}
+            onClick={() => handlePlay(item)}
+          />
+          <div className={styles.detail}>
+            <div className={styles.title}>
+              <Text ellipsis={{ tooltip: item.title }}>{item.title}</Text>
             </div>
           </div>
-        </Card>
+        </div>
       );
       Cols.push(
         <Col span={24 / column} key={`line${Rows.length}row${Cols.length + 1}`}>
