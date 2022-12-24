@@ -1,14 +1,9 @@
 import path from "path";
 import log from "electron-log";
-import { app } from "electron";
+import { dataDir } from "../constant";
 // 设置路径
 log.transports.file.resolvePath = () =>
-  path.join(
-    process.env.VITE_DEV_SERVER_URL
-      ? `${process.cwd()}/AppData`
-      : app.getPath("userData"),
-    `logs/${new Date().toLocaleDateString()}.log`
-  );
+  path.join(dataDir, `logs/${new Date().toLocaleDateString()}.log`);
 export const logger = log;
 export const logError = (error) => {
   // 处理 sequelize的报错

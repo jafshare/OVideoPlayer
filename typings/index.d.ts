@@ -1,0 +1,3 @@
+interface Setting {
+  tmdbKey?: string;
+}

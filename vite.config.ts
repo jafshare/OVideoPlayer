@@ -13,13 +13,14 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.join(__dirname, "src"),
+      "@common": path.join(__dirname, "common"),
       styles: path.join(__dirname, "src/assets/styles")
     }
   },
   plugins: [
     react(),
     electron({
-      include: ["electron", "preload"],
+      include: ["electron", "preload", "common"],
       transformOptions: {
         sourcemap: !!process.env.VSCODE_DEBUG
       },

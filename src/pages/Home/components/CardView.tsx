@@ -46,10 +46,7 @@ const CardView: React.FC<CardViewProps> = (props) => {
         >
           <div className={styles.cardContentWrapper}>
             <div className={styles.cover}>
-              <img
-                src="https://os.alipayobjects.com/rmsportal/QBnOOoLaAfKPirc.png"
-                title={item.title}
-              />
+              <img src={item.poster} title={item.title} />
             </div>
             <div className={styles.detail}>
               <div className={styles.title}>{item.title}</div>

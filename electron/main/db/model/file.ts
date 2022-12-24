@@ -2,7 +2,10 @@ import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../db";
 import { Movie } from "./movie";
 import { Series } from "./series";
-export class File extends Model {}
+export class File extends Model {
+  declare movieId?: number;
+  declare seriesId?: number;
+}
 File.init(
   {
     title: {

@@ -2,15 +2,57 @@ import express from "express";
 import { getDir, getFileStat, getFileStream, scan } from "../webdav";
 import { init, model } from "../db";
 import { logError } from "../log";
+import { moviedb } from "../tmdb";
+const normalizeTitle = (title: string) => {
+  if (!title) return title;
+  let normalizedTitle = title;
+  // 处理有后缀的情况 例如: testmovie.mkv
+  const extRE = /\.\w{3}?$/;
+  const extIndex = extRE.exec(normalizedTitle)?.index || -1;
+  if (extIndex >= 0) {
+    normalizedTitle = normalizedTitle.slice(0, extIndex);
+  }
+  const yearRE = / +[(（]\d{4}[)）]/;
+  // TODO 处理年份的情况, 例如 testmovie(2007).mkv,testmovie（2008）.mkv
+  const yearIndex = yearRE.exec(normalizedTitle)?.index || -1;
+  if (yearIndex >= 0) {
+    normalizedTitle = normalizedTitle.slice(0, yearIndex);
+  }
+  // TODO 处理有画质字符串的情况, 例如 testmovie 1080p.mkv, testmovie(1080p).mkv, testmovie（1080p）
+  const qualityRE = / +[(（]?\d{4}[pP][)）]?/;
+  const qualityIndex = qualityRE.exec(normalizedTitle)?.index || -1;
+  if (qualityIndex >= 0) {
+    normalizedTitle = normalizedTitle.slice(0, qualityIndex);
+  }
+  return normalizedTitle;
+};
 const getMediaInfo = async (media: any) => {
-  return {
-    title: media.basename,
+  const title = normalizeTitle(media.basename) || media.basename;
+  const baseInfo = {
+    title,
     type: "movie",
     etag: media.etag,
     description: "",
     poster: "",
-    isCheck: true
+    isCheck: false
   };
+  // TODO 校验是否已有apiKey
+  const res = await moviedb.searchMulti({
+    query: title,
+    language: "zh-cn"
+  });
+  // 默认取第一个
+  const mediaInfo = res.results?.[0];
+  console.log("videoInfo:", media.basename, res.results);
+  // TODO 处理名称，目前的名称不符合搜索的规范
+  if (mediaInfo) {
+    // TODO判断是否是movie
+    baseInfo.poster = `https://image.tmdb.org/t/p/original${mediaInfo.poster_path}`;
+    baseInfo.description = mediaInfo.overview;
+    baseInfo.title =
+      mediaInfo.media_type === "tv" ? mediaInfo.name : mediaInfo.title;
+  }
+  return baseInfo;
 };
 export async function startServer() {
   init();
@@ -67,8 +109,9 @@ export async function startServer() {
     // const result = await scan("/");
     // console.log("result:", result);
     // await writeFile("./data.json", JSON.stringify(result, null, 2));
+    // TODO tmdb是否有apikey
     // TODO
-    const data = require(`${process.cwd()}/data.json`).slice(0, 10);
+    const data = require(`${process.cwd()}/data.json`).slice(0, 50);
     model.File.bulkCreate(
       data.map((item) => ({
         etag: item.etag,
@@ -88,7 +131,6 @@ export async function startServer() {
       // media
       if (/video/.test(item.mime)) {
         const info = await getMediaInfo(item);
-        console.log("info:", info);
         // TODO 构建Movie、Series、Media
         if (info.type === "movie") {
           try {
@@ -117,7 +159,9 @@ export async function startServer() {
                 mediaId: media.id
               }
             });
-            await file.update({ movieId: movie.id });
+            if (file && file.movieId !== movie.id) {
+              await file.update({ movieId: movie.id });
+            }
           } catch (error) {
             console.log(error);
             logError(error);
