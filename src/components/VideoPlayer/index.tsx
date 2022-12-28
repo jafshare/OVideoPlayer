@@ -1,21 +1,25 @@
+import type { Ref } from "react";
 import React from "react";
-import ReactPlayer from "react-player";
-import type { ReactPlayerProps } from "react-player";
+import type { APITypes, PlyrOptions, PlyrSource } from "plyr-react";
+import { usePlyr } from "plyr-react";
+import "plyr-react/plyr.css";
+import classnames from "classnames";
 import styles from "./index.module.less";
 const VideoPlayer: React.FC<{
-  source: ReactPlayerProps["url"];
-  options?: Omit<ReactPlayerProps, "url">;
+  videoRef: Ref<APITypes>;
+  source: PlyrSource;
+  options?: PlyrOptions;
 }> = (props) => {
-  const { source, ...rest } = props || {};
+  const { source, videoRef, options, ...rest } = props || {};
+  const raptorRef = usePlyr(videoRef, {
+    source,
+    options
+  });
   return (
     <div className={styles.playerWrapper}>
-      <ReactPlayer
-        className={styles.player}
-        width="100%"
-        height="100%"
-        url={source}
-        controls
-        playing
+      <video
+        ref={raptorRef}
+        className={classnames("plyr-react", "plyr")}
         {...rest}
       />
     </div>

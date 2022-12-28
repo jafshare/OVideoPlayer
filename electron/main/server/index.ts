@@ -69,7 +69,10 @@ export async function startServer() {
   });
   app.post("/getDirectoryContents", async function (req, res) {
     const body = req.body;
-    res.send(await getDir(body.path));
+    res.send({
+      data: await getDir(body.path),
+      code: 1
+    });
   });
   // 流地址 /stream?path=/filename/fileid
   app.get("/stream", async function (req, res) {
