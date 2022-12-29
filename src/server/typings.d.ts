@@ -5,6 +5,10 @@ export type BaseRes<T> = {
 export namespace API {
   type Media = {
     /**
+     * 唯一键
+     */
+    id: number;
+    /**
      * 标题
      */
     title: string;
@@ -12,6 +16,10 @@ export namespace API {
      * 封面
      */
     poster: string;
+    /**
+     * 简介
+     */
+    description: string;
   };
   type MediaDetail = {
     /**

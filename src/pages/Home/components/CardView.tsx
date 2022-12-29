@@ -1,9 +1,10 @@
 import { useRequest } from "ahooks";
 import { Col, Empty, Row, Spin, Typography } from "antd";
-import React, { useEffect, useImperativeHandle } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useImperativeHandle, useState } from "react";
 import styles from "./CardView.module.less";
-import { getMedia, getMediaDetail } from "@/server";
+import Overview from "./Overview";
+import { getMedia } from "@/server";
+import type { API } from "@/server/typings";
 const { Text } = Typography;
 export interface CardViewProps {
   column?: number;
@@ -15,16 +16,16 @@ export interface CardViewProps {
 }
 const CardView: React.FC<CardViewProps> = (props) => {
   const { column = 6, actionRef, onLoadingChange, onPlay } = props;
-  const navigate = useNavigate();
+  const [overviewVisible, setOverviewVisible] = useState(false);
+  const [overviewData, setOverviewData] = useState<API.Media | undefined>();
   const {
     runAsync: getList,
     data: list,
     loading
   } = useRequest(getMedia, { loadingDelay: 300 });
-  const handlePlay = async (item: any) => {
-    // const res = await getMediaDetail(item.id);
-    // onPlay?.(res.data);
-    navigate(`/overview/${item.id}`);
+  const handleOverview = async (item: any) => {
+    setOverviewData(item);
+    setOverviewVisible(true);
   };
   const CardContent = () => {
     const Rows = [];
@@ -37,7 +38,7 @@ const CardView: React.FC<CardViewProps> = (props) => {
             <div
               className={styles.cover}
               style={{ backgroundImage: `url("${item.poster}")` }}
-              onClick={() => handlePlay(item)}
+              onClick={() => handleOverview(item)}
             />
             <div className={styles.detail}>
               <div className={styles.title}>
@@ -90,6 +91,12 @@ const CardView: React.FC<CardViewProps> = (props) => {
           )}
         </div>
       </Spin>
+      <Overview
+        visible={overviewVisible}
+        data={overviewData}
+        onClose={() => setOverviewVisible(false)}
+        onPlay={onPlay}
+      />
     </div>
   );
 };

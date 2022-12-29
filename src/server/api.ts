@@ -25,6 +25,6 @@ export async function scan() {
 export async function getMedia(): Promise<API.Media[]> {
   return service.get("/media");
 }
-export async function getMediaDetail(id: string): Promise<API.MediaDetail> {
+export async function getMediaDetail(id: number): Promise<API.MediaDetail> {
   return service.get(`/media/${id}`);
 }
